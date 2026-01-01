@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>课程表</title>
+    <style>
+        @font-face {
+            font-family: 'SmileySans-Oblique-2';
+            src: url('SmileySans-Oblique-2.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'SmileySans-Oblique-2', sans-serif;
+        }
+
+        :root {
+            --bg-gradient-start: #000000;
+            --bg-gradient-end: #000000;
+            --text-color: #fff;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.1);
+            --input-border: rgba(255, 255, 255, 0.3);
+            --course-bg: rgba(103, 126, 234, 0.3);
+            --course-border: rgba(255, 255, 255, 0.2);
+            --button-bg: rgba(255, 255, 255, 0.2);
+            --button-border: rgba(255, 255, 255, 0.3);
+            --button-primary-bg: rgba(137, 160, 255, 0.7);
+            --table-header-bg: rgba(255, 255, 255, 0.15);
+            --table-border: rgba(255, 255, 255, 0.2);
+            --time-column-bg: rgba(255, 255, 255, 0.1);
+            --modal-bg: rgba(255, 255, 255, 0.15);
+            --modal-border: rgba(255, 255, 255, 0.2);
+            --hint-bg: rgba(255, 255, 255, 0.1);
+            --danger-color: #ff6b6b;
+        }
+
+        .dark-mode {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --text-color: #e2e8f0;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.3);
+            --card-bg: rgba(30, 41, 59, 0.5);
+            --card-border: rgba(148, 163, 184, 0.1);
+            --input-bg: rgba(30, 41, 59, 0.7);
+            --input-border: rgba(148, 163, 184, 0.3);
+            --course-bg: rgba(59, 130, 246, 0.3);
+            --course-border: rgba(59, 130, 246, 0.5);
+            --button-bg: rgba(30, 41, 59, 0.8);
+            --button-border: rgba(148, 163, 184, 0.3);
+            --button-primary-bg: rgba(12, 45, 97, 0.7);
+            --table-header-bg: rgba(30, 41, 59, 0.8);
+            --table-border: rgba(148, 163, 184, 0.2);
+            --time-column-bg: rgba(30, 41, 59, 0.6);
+            --modal-bg: rgba(15, 23, 42, 0.9);
+            --modal-border: rgba(59, 130, 246, 0.3);
+            --hint-bg: rgba(30, 41, 59, 0.7);
+            --danger-color: #f87171;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('Beijing.webp') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .dark-mode body::before {
+            opacity: 0.3;
+        }
+
+        .glass-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px var(--glass-shadow);
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .title {
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        nav {
+            width: 100%;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        nav ul li {
+            margin: 0;
+        }
+
+        nav ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+
+        nav ul li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode nav ul li a:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--button-bg);
+            border: 1px solid var(--button-border);
+            color: var(--text-color);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .dark-mode .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .action-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .action-btn.disabled:hover {
+            background: var(--button-bg);
+            transform: none;
+        }
+
+        .add-btn::before {
+            content: '';
+            width: 16px;
+            height: 2px;
+            background-color: currentColor;
+            position: absolute;
+            border-radius: 1px;
+        }
+
+        .add-btn::after {
+            content: '';
+            width: 2px;
+            height: 16px;
+            background-color: currentColor;
+            position: absolute;
+            border-radius: 1px;
+        }
+
+        .clear-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .theme-toggle-btn::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        .dark-mode .theme-toggle-btn::before {
+            background-color: transparent;
+            box-shadow: inset -6px 0 0 0 currentColor;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            width: 100%;
+        }
+
+        .empty-timetable {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px var(--glass-shadow);
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .empty-timetable h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-timetable p {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.5rem;
+            background: var(--button-bg);
+            color: var(--text-color);
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid var(--button-border);
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--glass-shadow);
+        }
+
+        .dark-mode .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn.primary {
+            background: var(--button-primary-bg);
+        }
+
+        .btn.primary:hover {
+            background: rgba(80, 103, 206, 0.9);
+        }
+
+        .dark-mode .btn.primary:hover {
+            background: rgba(0, 59, 154, 0.9);
+        }
+
+        .timetable-container {
+            display: none;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .mobile-hint {
+            display: none;
+            text-align: center;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            opacity: 0.8;
+            background: var(--hint-bg);
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-hint {
+                display: block;
+            }
+        }
+
+        .timetable {
+            width: 100%;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px var(--glass-shadow);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .timetable-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .timetable-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 800px;
+        }
+
+        .timetable-table th {
+            padding: 0.8rem 0.2rem;
+            text-align: center;
+            background: var(--table-header-bg);
+            border-bottom: 1px solid var(--table-border);
+            border-right: 1px solid var(--table-border);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 80px;
+        }
+
+        .timetable-table td {
+            padding: 0.6rem 0.2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--table-border);
+            border-right: 1px solid var(--table-border);
+            height: 70px;
+            vertical-align: top;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 80px;
+        }
+
+        .timetable-table td:last-child,
+        .timetable-table th:last-child {
+            border-right: none;
+        }
+
+        .timetable-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .timetable-table th:first-child,
+        .timetable-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: var(--time-column-bg);
+            width: 90px;
+            min-width: 90px;
+            border-right: 2px solid var(--table-border);
+            box-shadow: 3px 0 8px rgba(0, 0, 0, 0.2);
+            font-size: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .timetable-table th:first-child {
+            z-index: 11;
+            background: var(--table-header-bg);
+            font-size: 0.8rem;
+        }
+
+        .course-cell {
+            background: var(--course-bg);
+            border-radius: 6px;
+            padding: 0.4rem;
+            margin-bottom: 0.2rem;
+            border: 1px solid var(--course-border);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.7rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow: visible;
+            max-width: 100%;
+        }
+
+        .course-cell:hover {
+            background: rgba(103, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .dark-mode .course-cell:hover {
+            background: rgba(59, 130, 246, 0.4);
+        }
+
+        .course-name {
+            margin-bottom: 0.1rem;
+            font-size: 0.7rem;
+            white-space: normal;
+            word-break: break-word;
+            overflow: visible;
+            line-height: 1.2;
+        }
+
+        .course-details {
+            font-size: 0.65rem;
+            opacity: 0.9;
+            line-height: 1.1;
+            white-space: normal;
+            word-break: break-word;
+            overflow: visible;
+        }
+
+        .time-settings {
+            display: none;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px var(--glass-shadow);
+            padding: 1.5rem;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .time-settings h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+            text-align: center;
+        }
+
+        .time-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .class-count {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .class-count label {
+            font-size: 0.95rem;
+        }
+
+        .class-count input {
+            width: 70px;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .time-slot {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .time-slot-header {
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .slot-number {
+            font-size: 1rem;
+        }
+
+        .time-inputs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .time-input {
+            padding: 0.4rem;
+            border-radius: 6px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-color);
+            width: 55px;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .time-separator {
+            margin: 0 0.2rem;
+        }
+
+        .time-settings-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal {
+            background: var(--modal-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--modal-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .modal h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.2rem;
+            text-align: center;
+        }
+
+        .modal p {
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: rgba(103, 126, 234, 0.8);
+        }
+
+        .dark-mode .form-group input:focus, .dark-mode .form-group select:focus {
+            border-color: rgba(59, 130, 246, 0.8);
+        }
+
+        .required::after {
+            content: " *";
+            color: var(--danger-color);
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .modal-btn.cancel {
+            background: var(--button-bg);
+            color: var(--text-color);
+            border: 1px solid var(--button-border);
+        }
+
+        .modal-btn.save {
+            background: var(--button-primary-bg);
+            color: var(--text-color);
+        }
+
+        .modal-btn.danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--glass-shadow);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px var(--glass-shadow);
+            width: 100%;
+            margin-top: auto;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        footer p {
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        footer p:hover {
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .qrcode-page {
+            display: none;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px var(--glass-shadow);
+            padding: 1.5rem;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .qrcode-page h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .qrcode-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        @media (min-width: 769px) {
+            .qrcode-container {
+                flex-direction: row;
+                justify-content: center;
+                align-items: flex-start;
+                gap: 3rem;
+            }
+            
+            .qrcode-item {
+                flex: 0 1 auto;
+                max-width: 300px;
+            }
+            
+            .qrcode-image-container {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .qrcode-container {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .qrcode-item {
+                width: 100%;
+            }
+            
+            .qrcode-image-container {
+                width: 180px;
+                height: 180px;
+            }
+        }
+
+        .qrcode-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qrcode-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .qrcode-image-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .qrcode-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+
+        .qrcode-description {
+            font-size: 1rem;
+            text-align: center;
+            opacity: 0.9;
+            line-height: 1.4;
+            margin-top: 1rem;
+        }
+
+        .qrcode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            align-items: center;
+            margin-top: 1.5rem;
+        }
+        
+        .course-info {
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
+        }
+        
+        .course-info-item {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .course-info-label {
+            margin-bottom: 0.2rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .course-info-value {
+            font-size: 1rem;
+        }
+        
+        .dark-mode .course-info-item {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .dark-mode .course-info-label {
+            color: rgba(226, 232, 240, 0.7);
+        }
+        
+        .time-input:invalid {
+            border-color: var(--danger-color);
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+            display: none;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="glass-container">
+        <header>
+            <div class="title">课程表</div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="nav-link active">课程表</a></li>
+                    <li><a href="#" class="nav-link">时间设置</a></li>
+                    <li><a href="#" class="nav-link">支持</a></li>
+                    <div class="action-buttons">
+                        <li><div class="action-btn add-btn disabled" title="添加课程">
+                        </div></li>
+                        <li><div class="action-btn clear-btn disabled" title="清空课程">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17 6H22V8H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V8H2V6H7V3C7 2.44772 7.44772 2 8 2H16C16.5523 2 17 2.44772 17 3V6ZM18 8H6V20H18V8ZM9 4V6H15V4H9Z"></path>
+                            </svg>
+                        </div></li>
+                        <li><div class="action-btn theme-toggle-btn" id="themeToggle" title="切换到夜间模式">
+                        </div></li>
+                    </div>
+                </ul>
+            </nav>
+        </header>
+
+        <div class="main-content">
+            <div class="empty-timetable" id="emptyTimetable">
+                <h1>欢迎使用课程表</h1>
+                <p>当前还未设置课程时间，请先设置课程时间。</p>
+                <button class="btn primary" id="setupTimeBtn">设置课程时间</button>
+            </div>
+
+            <div class="time-settings" id="timeSettings">
+                <h2>课程时间设置</h2>
+                <div class="time-controls">
+                    <div class="class-count">
+                        <label for="classCount">每日课程节数：</label>
+                        <input type="number" id="classCount" min="1" max="99" value="8">
+                    </div>
+                    <button class="btn" id="generateTimeSlots">开始设置时间表</button>
+                </div>
+                <div class="time-slots" id="timeSlotsContainer"></div>
+                <div class="time-settings-buttons">
+                    <button class="btn primary" id="saveTimeSettings">保存时间设置</button>
+                    <button class="btn" id="cancelTimeSettings">取消</button>
+                </div>
+            </div>
+
+            <div class="qrcode-page" id="qrcodePage">
+                <h2>支持页面</h2>
+                <div class="qrcode-container">
+                    <div class="qrcode-item">
+                        <div class="qrcode-title">微信支付</div>
+                        <div class="qrcode-image-container">
+                            <img src="QR/Wechat_QRC.webp" alt="微信支付二维码" class="qrcode-image" id="wechatQrCode">
+                        </div>
+                    </div>
+                    
+                    <div class="qrcode-item">
+                        <div class="qrcode-title">支付宝</div>
+                        <div class="qrcode-image-container">
+                            <img src="QR/Alipay_QR.webp" alt="支付宝二维码" class="qrcode-image" id="alipayQrCode">
+                        </div>
+                    </div>
+                </div>
+                <div class="qrcode-description" style="margin-top: 2rem;">如果对你有帮助，请支持我。谢谢！</div>
+                <div class="qrcode-buttons">
+                    <button class="btn primary" id="backFromQrcode">返回课程表</button>
+                </div>
+            </div>
+
+            <div class="timetable-container" id="timetableContainer">
+                <div class="mobile-hint">←左右滑动查看完整课程表→</div>
+                <div class="timetable" id="timetable"></div>
+            </div>
+        </div>
+        <footer><p onclick="window.open('https://m-pureruby.github.io/PureRuby', '_blank')">个人博客：Pure Ruby</p></footer>
+    </div>
+
+    <div class="modal-overlay" id="addCourseModal">
+        <div class="modal">
+            <h2>添加课程</h2>
+            <form id="addCourseForm">
+                <div class="form-group">
+                    <label for="courseName" class="required">课程名称</label>
+                    <input type="text" id="courseName" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="coursePeriod" class="required">课节</label>
+                    <select id="coursePeriod" required>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="teacherName">老师名称</label>
+                    <input type="text" id="teacherName" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label for="classroom">教室名称</label>
+                    <input type="text" id="classroom" maxlength="30">
+                </div>
+                <div class="form-group">
+                    <label for="notes">备注</label>
+                    <input type="text" id="notes" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="weekday">星期</label>
+                    <select id="weekday">
+                        <option value="1">星期一</option>
+                        <option value="2">星期二</option>
+                        <option value="3">星期三</option>
+                        <option value="4">星期四</option>
+                        <option value="5">星期五</option>
+                        <option value="6">星期六</option>
+                        <option value="7">星期日</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn cancel" id="cancelAddCourse">取消</button>
+                    <button type="submit" class="modal-btn save">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="alertModal">
+        <div class="modal">
+            <h2 id="alertTitle">提示</h2>
+            <p id="alertMessage"></p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="closeAlert">关闭</button>
+                <button class="modal-btn save" id="alertActionBtn" style="display: none;">立即设置</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmClearModal">
+        <div class="modal">
+            <h2>确认清空</h2>
+            <p>确定清空所有课程？此操作不可逆。</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancelClear">取消</button>
+                <button class="modal-btn danger" id="confirmClear">确定清空</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="courseDetailModal">
+        <div class="modal">
+            <h2 id="courseDetailTitle">课程详情</h2>
+            <div class="course-info" id="courseDetailContent">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="closeCourseDetail">关闭</button>
+                <button class="modal-btn danger" id="deleteCourseBtn">删除课程</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="confirmDeleteCourseModal">
+        <div class="modal">
+            <h2>确认删除课程</h2>
+            <p id="confirmDeleteMessage">确定删除此课程？</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancelDeleteCourse">取消</button>
+                <button class="modal-btn danger" id="confirmDeleteCourse">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timetableData = [];
+        let timeSettings = null;
+        const daysOfWeek = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+        let currentSelectedCourse = null;
+
+        const emptyTimetable = document.getElementById('emptyTimetable');
+        const timeSettingsDiv = document.getElementById('timeSettings');
+        const timetableContainer = document.getElementById('timetableContainer');
+        const timetable = document.getElementById('timetable');
+        const setupTimeBtn = document.getElementById('setupTimeBtn');
+        const addCourseBtn = document.querySelector('.add-btn');
+        const clearBtn = document.querySelector('.clear-btn');
+        const classCountInput = document.getElementById('classCount');
+        const generateTimeSlotsBtn = document.getElementById('generateTimeSlots');
+        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        const saveTimeSettingsBtn = document.getElementById('saveTimeSettings');
+        const cancelTimeSettingsBtn = document.getElementById('cancelTimeSettings');
+        const addCourseModal = document.getElementById('addCourseModal');
+        const addCourseForm = document.getElementById('addCourseForm');
+        const cancelAddCourseBtn = document.getElementById('cancelAddCourse');
+        const coursePeriodSelect = document.getElementById('coursePeriod');
+        const alertModal = document.getElementById('alertModal');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const closeAlertBtn = document.getElementById('closeAlert');
+        const alertActionBtn = document.getElementById('alertActionBtn');
+        const confirmClearModal = document.getElementById('confirmClearModal');
+        const cancelClearBtn = document.getElementById('cancelClear');
+        const confirmClearBtn = document.getElementById('confirmClear');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const qrcodePage = document.getElementById('qrcodePage');
+        const backFromQrcodeBtn = document.getElementById('backFromQrcode');
+        const courseDetailModal = document.getElementById('courseDetailModal');
+        const courseDetailTitle = document.getElementById('courseDetailTitle');
+        const courseDetailContent = document.getElementById('courseDetailContent');
+        const closeCourseDetailBtn = document.getElementById('closeCourseDetail');
+        const deleteCourseBtn = document.getElementById('deleteCourseBtn');
+        const confirmDeleteCourseModal = document.getElementById('confirmDeleteCourseModal');
+        const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+        const cancelDeleteCourseBtn = document.getElementById('cancelDeleteCourse');
+        const confirmDeleteCourseBtn = document.getElementById('confirmDeleteCourse');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+            setupEventListeners();
+            updateUI();
+            initTheme();
+        });
+
+        function enableDarkMode() {
+            document.body.classList.add('dark-mode');
+            themeToggleBtn.title = '切换到日间模式';
+            localStorage.setItem('timetableTheme', 'dark');
+        }
+
+        function disableDarkMode() {
+            document.body.classList.remove('dark-mode');
+            themeToggleBtn.title = '切换到夜间模式';
+            localStorage.setItem('timetableTheme', 'light');
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('timetableTheme');
+            if (savedTheme === 'dark') {
+                enableDarkMode();
+            } else {
+                disableDarkMode();
+            }
+        }
+
+        function toggleTheme() {
+            if (document.body.classList.contains('dark-mode')) {
+                disableDarkMode();
+            } else {
+                enableDarkMode();
+            }
+        }
+
+        function setupEventListeners() {
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.textContent === '时间设置') {
+                        showTimeSettings();
+                    } else if (this.textContent === '支持') {
+                        showQrCodePage();
+                    } else {
+                        showTimetable();
+                    }
+                });
+            });
+
+            setupTimeBtn.addEventListener('click', showTimeSettings);
+            addCourseBtn.addEventListener('click', showAddCourseModal);
+            clearBtn.addEventListener('click', showConfirmClearModal);
+            generateTimeSlotsBtn.addEventListener('click', generateTimeSlots);
+            saveTimeSettingsBtn.addEventListener('click', saveTimeSettings);
+            cancelTimeSettingsBtn.addEventListener('click', cancelTimeSettings);
+            addCourseForm.addEventListener('submit', saveCourse);
+            cancelAddCourseBtn.addEventListener('click', hideAddCourseModal);
+            closeAlertBtn.addEventListener('click', hideAlertModal);
+            alertActionBtn.addEventListener('click', function() {
+                hideAlertModal();
+                showTimeSettings();
+            });
+            cancelClearBtn.addEventListener('click', hideConfirmClearModal);
+            confirmClearBtn.addEventListener('click', clearAllCourses);
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            backFromQrcodeBtn.addEventListener('click', showTimetable);
+            
+            classCountInput.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                if (value < 1) this.value = 1;
+                if (value > 99) this.value = 99;
+            });
+
+            classCountInput.addEventListener('input', function() {
+                let value = parseInt(this.value);
+                if (isNaN(value) || value < 1) this.value = 1;
+                if (value > 99) this.value = 99;
+            });
+
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        hideModal(this);
+                    }
+                });
+            });
+
+            closeCourseDetailBtn.addEventListener('click', hideCourseDetailModal);
+            deleteCourseBtn.addEventListener('click', showConfirmDeleteCourseModal);
+            cancelDeleteCourseBtn.addEventListener('click', hideConfirmDeleteCourseModal);
+            confirmDeleteCourseBtn.addEventListener('click', deleteSelectedCourse);
+        }
+
+        function hideModal(modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showModal(modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideAllPages() {
+            emptyTimetable.style.display = 'none';
+            timeSettingsDiv.style.display = 'none';
+            timetableContainer.style.display = 'none';
+            qrcodePage.style.display = 'none';
+        }
+
+        function showTimeSettings() {
+            hideAllPages();
+            timeSettingsDiv.style.display = 'block';
+
+            if (timeSettings) {
+                classCountInput.value = timeSettings.classCount;
+                generateTimeSlotsWithSavedData();
+            } else {
+                generateTimeSlots();
+            }
+
+            window.scrollTo(0, 0);
+        }
+
+        function hideTimeSettings() {
+            timeSettingsDiv.style.display = 'none';
+        }
+
+        function cancelTimeSettings() {
+            hideAllPages();
+            
+            if (timeSettings) {
+                showTimetable();
+            } else {
+                emptyTimetable.style.display = 'block';
+            }
+        }
+
+        function showTimetable() {
+            hideAllPages();
+            
+            if (timeSettings) {
+                timetableContainer.style.display = 'block';
+                renderTimetable();
+            } else {
+                emptyTimetable.style.display = 'block';
+            }
+
+            window.scrollTo(0, 0);
+        }
+
+        function showQrCodePage() {
+            hideAllPages();
+            qrcodePage.style.display = 'block';
+
+            window.scrollTo(0, 0);
+        }
+
+        function generateTimeSlots() {
+            const classCount = parseInt(classCountInput.value) || 8;
+            timeSlotsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= classCount; i++) {
+                const startHour = 8;
+                const startMinute = 0;
+                const duration = 45;
+                const breakTime = 10;
+                
+                const totalMinutesBefore = (i - 1) * (duration + breakTime);
+                const startTotalMinutes = startHour * 60 + startMinute + totalMinutesBefore;
+                const endTotalMinutes = startTotalMinutes + duration;
+                
+                const startHourFormatted = Math.floor(startTotalMinutes / 60);
+                const startMinuteFormatted = startTotalMinutes % 60;
+                const endHourFormatted = Math.floor(endTotalMinutes / 60);
+                const endMinuteFormatted = endTotalMinutes % 60;
+                
+                createTimeSlot(i, startHourFormatted, startMinuteFormatted, endHourFormatted, endMinuteFormatted);
+            }
+        }
+
+        function generateTimeSlotsWithSavedData() {
+            const classCount = parseInt(classCountInput.value) || 8;
+            timeSlotsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= classCount; i++) {
+                const savedSlot = timeSettings.timeSlots.find(slot => slot.period === i);
+                
+                let startHour = 8, startMinute = 0, endHour = 8, endMinute = 45;
+                
+                if (savedSlot) {
+                    const [startH, startM] = savedSlot.startTime.split(':').map(Number);
+                    const [endH, endM] = savedSlot.endTime.split(':').map(Number);
+                    startHour = startH;
+                    startMinute = startM;
+                    endHour = endH;
+                    endMinute = endM;
+                } else {
+                    const duration = 45;
+                    const breakTime = 10;
+                    const totalMinutesBefore = (i - 1) * (duration + breakTime);
+                    const startTotalMinutes = startHour * 60 + startMinute + totalMinutesBefore;
+                    const endTotalMinutes = startTotalMinutes + duration;
+                    
+                    startHour = Math.floor(startTotalMinutes / 60);
+                    startMinute = startTotalMinutes % 60;
+                    endHour = Math.floor(endTotalMinutes / 60);
+                    endMinute = endTotalMinutes % 60;
+                }
+                
+                createTimeSlot(i, startHour, startMinute, endHour, endMinute);
+            }
+        }
+
+        function createTimeSlot(index, startHour, startMinute, endHour, endMinute) {
+            const timeSlotDiv = document.createElement('div');
+            timeSlotDiv.className = 'time-slot';
+            
+            timeSlotDiv.innerHTML = `
+                <div class="time-slot-header">
+                    <div class="slot-number">第 ${index} 节</div>
+                </div>
+                <div class="time-inputs">
+                    <div class="time-input-group">
+                        <input type="number" class="time-input start-hour" min="0" max="23" value="${startHour}" placeholder="时">
+                        <span>:</span>
+                        <input type="number" class="time-input start-minute" min="0" max="59" value="${startMinute.toString().padStart(2, '0')}" placeholder="分">
+                    </div>
+                    <span class="time-separator">至</span>
+                    <div class="time-input-group">
+                        <input type="number" class="time-input end-hour" min="0" max="23" value="${endHour}" placeholder="时">
+                        <span>:</span>
+                        <input type="number" class="time-input end-minute" min="0" max="59" value="${endMinute.toString().padStart(2, '0')}" placeholder="分">
+                    </div>
+                </div>
+            `;
+            timeSlotsContainer.appendChild(timeSlotDiv);
+        }
+
+        function saveTimeSettings() {
+            const classCount = parseInt(classCountInput.value) || 8;
+            const timeSlots = [];
+
+            const timeSlotDivs = document.querySelectorAll('.time-slot');
+            let hasError = false;
+            
+            timeSlotDivs.forEach((slot, index) => {
+                const startHour = parseInt(slot.querySelector('.start-hour').value) || 0;
+                const startMinute = parseInt(slot.querySelector('.start-minute').value) || 0;
+                const endHour = parseInt(slot.querySelector('.end-hour').value) || 0;
+                const endMinute = parseInt(slot.querySelector('.end-minute').value) || 0;
+                
+                if (startHour < 0 || startHour > 23 || startMinute < 0 || startMinute > 59 ||
+                    endHour < 0 || endHour > 23 || endMinute < 0 || endMinute > 59) {
+                    hasError = true;
+                    return;
+                }
+                
+                const startTotal = startHour * 60 + startMinute;
+                const endTotal = endHour * 60 + endMinute;
+                
+                if (endTotal <= startTotal) {
+                    hasError = true;
+                    return;
+                }
+                
+                timeSlots.push({
+                    period: index + 1,
+                    startTime: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+                    endTime: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+                });
+            });
+
+            if (hasError) {
+                showAlert('时间设置错误', '请检查时间输入是否正确，开始时间应早于结束时间。');
+                return;
+            }
+
+            timeSettings = {
+                classCount: classCount,
+                timeSlots: timeSlots
+            };
+            
+            saveToLocalStorage();
+            updateUI();
+            showTimetable();
+            showAlert('时间设置已保存', '课程时间设置已成功保存，现在可以添加课程了。');
+        }
+
+        function showAddCourseModal() {
+            if (!timeSettings) {
+                showAlert('未设置课程时间', '请先设置课程时间，然后才能添加课程。', true);
+                return;
+            }
+
+            coursePeriodSelect.innerHTML = '';
+            for (let i = 1; i <= timeSettings.classCount; i++) {
+                const timeSlot = timeSettings.timeSlots.find(slot => slot.period === i);
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `第 ${i} 节 (${timeSlot ? timeSlot.startTime + ' - ' + timeSlot.endTime : ''})`;
+                coursePeriodSelect.appendChild(option);
+            }
+
+            showModal(addCourseModal);
+            addCourseForm.reset();
+            document.getElementById('courseName').focus();
+        }
+
+        function hideAddCourseModal() {
+            hideModal(addCourseModal);
+        }
+
+        function saveCourse(e) {
+            e.preventDefault();
+            
+            const courseName = document.getElementById('courseName').value.trim();
+            const coursePeriod = parseInt(document.getElementById('coursePeriod').value);
+            const teacherName = document.getElementById('teacherName').value.trim();
+            const classroom = document.getElementById('classroom').value.trim();
+            const notes = document.getElementById('notes').value.trim();
+            const weekday = parseInt(document.getElementById('weekday').value);
+            
+            if (!courseName) {
+                showAlert('请输入课程名称', '课程名称是必填项，请填写后再保存。');
+                return;
+            }
+
+            const existingCourse = timetableData.find(course => 
+                course.period === coursePeriod && course.weekday === weekday
+            );
+            
+            if (existingCourse) {
+                showAlert('时间冲突', `该时间段已有课程 "${existingCourse.name}"，请选择其他时间。`);
+                return;
+            }
+
+            const course = {
+                id: Date.now(),
+                name: courseName,
+                period: coursePeriod,
+                teacher: teacherName,
+                classroom: classroom,
+                notes: notes,
+                weekday: weekday
+            };
+
+            timetableData.push(course);
+            saveToLocalStorage();
+            updateUI();
+            renderTimetable();
+            hideAddCourseModal();
+            showAlert('课程已添加', '课程已成功添加到课程表中。');
+        }
+
+        function showConfirmClearModal() {
+            if (!timeSettings) {
+                showAlert('未设置课程时间', '请先设置课程时间，然后才能使用清空功能。', true);
+                return;
+            }
+            
+            if (timetableData.length === 0) {
+                showAlert('课程表为空', '课程表没有课程，无需清空。');
+                return;
+            }
+            
+            showModal(confirmClearModal);
+        }
+
+        function hideConfirmClearModal() {
+            hideModal(confirmClearModal);
+        }
+
+        function clearAllCourses() {
+            timetableData = [];
+            saveToLocalStorage();
+            updateUI();
+            renderTimetable();
+            hideConfirmClearModal();
+            showAlert('课程已清空', '所有课程已从课程表中移除。');
+        }
+
+        function showAlert(title, message, showAction = false) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            
+            if (showAction) {
+                alertActionBtn.style.display = 'block';
+            } else {
+                alertActionBtn.style.display = 'none';
+            }
+            
+            showModal(alertModal);
+        }
+
+        function hideAlertModal() {
+            hideModal(alertModal);
+        }
+
+        function showCourseDetailModal(course) {
+            currentSelectedCourse = course;
+            
+            courseDetailTitle.textContent = course.name;
+            
+            const timeSlot = timeSettings.timeSlots.find(slot => slot.period === course.period);
+            const timeText = timeSlot ? `${timeSlot.startTime} - ${timeSlot.endTime}` : `第 ${course.period} 节`;
+            const weekdayText = daysOfWeek[course.weekday];
+            
+            let detailHTML = `
+                <div class="course-info-item">
+                    <div class="course-info-label">课程名称</div>
+                    <div class="course-info-value">${course.name}</div>
+                </div>
+                <div class="course-info-item">
+                    <div class="course-info-label">上课时间</div>
+                    <div class="course-info-value">${weekdayText}，${timeText}</div>
+                </div>
+            `;
+            
+            if (course.teacher) {
+                detailHTML += `
+                    <div class="course-info-item">
+                        <div class="course-info-label">授课教师</div>
+                        <div class="course-info-value">${course.teacher}</div>
+                    </div>
+                `;
+            }
+            
+            if (course.classroom) {
+                detailHTML += `
+                    <div class="course-info-item">
+                        <div class="course-info-label">教室</div>
+                        <div class="course-info-value">${course.classroom}</div>
+                    </div>
+                `;
+            }
+            
+            if (course.notes) {
+                detailHTML += `
+                    <div class="course-info-item">
+                        <div class="course-info-label">备注</div>
+                        <div class="course-info-value">${course.notes}</div>
+                    </div>
+                `;
+            }
+            
+            courseDetailContent.innerHTML = detailHTML;
+            showModal(courseDetailModal);
+        }
+
+        function hideCourseDetailModal() {
+            hideModal(courseDetailModal);
+            currentSelectedCourse = null;
+        }
+
+        function showConfirmDeleteCourseModal() {
+            if (!currentSelectedCourse) return;
+            
+            confirmDeleteMessage.textContent = `确定要删除 "${currentSelectedCourse.name}" 课程吗？此操作不可逆。`;
+            showModal(confirmDeleteCourseModal);
+        }
+
+        function hideConfirmDeleteCourseModal() {
+            hideModal(confirmDeleteCourseModal);
+        }
+
+        function deleteSelectedCourse() {
+            if (!currentSelectedCourse) return;
+
+            timetableData = timetableData.filter(c => c.id !== currentSelectedCourse.id);
+            saveToLocalStorage();
+            updateUI();
+            renderTimetable();
+            hideConfirmDeleteCourseModal();
+            hideCourseDetailModal();
+            showAlert('课程已删除', `"${currentSelectedCourse.name}" 课程已从课程表中删除。`);
+            currentSelectedCourse = null;
+        }
+
+        function renderTimetable() {
+            if (!timeSettings) return;
+
+            timetable.innerHTML = '';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'timetable-wrapper';
+
+            const table = document.createElement('table');
+            table.className = 'timetable-table';
+
+            const thead = document.createElement('thead');
+            let headerRow = '<tr><th>时间</th>';
+
+            for (let i = 1; i <= 7; i++) {
+                headerRow += `<th>${daysOfWeek[i]}</th>`;
+            }
+            
+            headerRow += '</tr>';
+            thead.innerHTML = headerRow;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+
+            for (let period = 1; period <= timeSettings.classCount; period++) {
+                const timeSlot = timeSettings.timeSlots.find(slot => slot.period === period);
+                const row = document.createElement('tr');
+
+                const timeCell = document.createElement('td');
+                timeCell.textContent = timeSlot ? `${timeSlot.startTime} - ${timeSlot.endTime}` : `第 ${period} 节`;
+                row.appendChild(timeCell);
+
+                for (let weekday = 1; weekday <= 7; weekday++) {
+                    const cell = document.createElement('td');
+
+                    const courses = timetableData.filter(course => 
+                        course.period === period && course.weekday === weekday
+                    );
+
+                    courses.forEach(course => {
+                        const courseDiv = document.createElement('div');
+                        courseDiv.className = 'course-cell';
+                        courseDiv.innerHTML = `
+                            <div class="course-name">${course.name}</div>
+                            <div class="course-details">
+                                ${course.teacher ? `教师: ${course.teacher}<br>` : ''}
+                                ${course.classroom ? `教室: ${course.classroom}` : ''}
+                                ${course.notes ? `<br>备注: ${course.notes}` : ''}
+                            </div>
+                        `;
+
+                        courseDiv.addEventListener('click', function() {
+                            showCourseDetailModal(course);
+                        });
+                        
+                        cell.appendChild(courseDiv);
+                    });
+                    
+                    row.appendChild(cell);
+                }
+                
+                tbody.appendChild(row);
+            }
+            
+            table.appendChild(tbody);
+            wrapper.appendChild(table);
+            timetable.appendChild(wrapper);
+        }
+
+        function updateUI() {
+            if (timeSettings) {
+                addCourseBtn.classList.remove('disabled');
+                clearBtn.classList.remove('disabled');
+            } else {
+                addCourseBtn.classList.add('disabled');
+                clearBtn.classList.add('disabled');
+            }
+
+            if (timeSettings) {
+                showTimetable();
+            } else {
+                emptyTimetable.style.display = 'block';
+                timeSettingsDiv.style.display = 'none';
+                timetableContainer.style.display = 'none';
+                qrcodePage.style.display = 'none';
+            }
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                timeSettings: timeSettings,
+                timetableData: timetableData
+            };
+            localStorage.setItem('timetableSystem', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('timetableSystem');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    timeSettings = data.timeSettings;
+                    timetableData = data.timetableData || [];
+                } catch (e) {
+                    console.error('加载本地存储数据失败:', e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
